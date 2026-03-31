@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+*.local
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+
+# Large/original GLB files at root (compressed versions in assets/ and public/ are tracked)
+/CleanRoom_mobile.glb
+/Clean_Room_Needle.glb
+/Clean_Room_Needle_mobile.glb

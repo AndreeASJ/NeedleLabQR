@@ -1,0 +1,24 @@
+{
+  "name": "@needle-tools/needle-lab-qr",
+  "version": "1.0.0",
+  "description": "NeedleLabQR – WebXR AR image tracking experience (Needle Engine)",
+  "type": "module",
+  "scripts": {
+    "start": "vite --host",
+    "build:dev": "vite build --mode development",
+    "build:production": "vite build",
+    "postinstall": "patch-package"
+  },
+  "dependencies": {
+    "patch-package": "^8.0.0",
+    "@needle-tools/engine": "4.15.0",
+    "three": "npm:@needle-tools/three@^0.169.0"
+  },
+  "devDependencies": {
+    "@needle-tools/helper": "latest",
+    "@types/three": "0.169.0",
+    "@vitejs/plugin-basic-ssl": "^0.1.1",
+    "typescript": "^5.3.0",
+    "vite": "<=4.3.9"
+  }
+}

@@ -1,0 +1,69 @@
+diff --git a/node_modules/@needle-tools/engine/lib/engine-components/webxr/WebARSessionRoot.js b/node_modules/@needle-tools/engine/lib/engine-components/webxr/WebARSessionRoot.js
+index 28557b2..2389831 100644
+--- a/node_modules/@needle-tools/engine/lib/engine-components/webxr/WebARSessionRoot.js
++++ b/node_modules/@needle-tools/engine/lib/engine-components/webxr/WebARSessionRoot.js
+@@ -218,14 +218,14 @@ export class WebARSessionRoot extends Behaviour {
+             // Update anchors, if any
+             if (this._anchor && args.xr.referenceSpace) {
+                 const pose = args.xr.frame.getPose(this._anchor.anchorSpace, args.xr.referenceSpace);
+-                if (pose && this.context.time.frame % 20 === 0) {
++                if (pose) {
+                     // apply the anchor pose to one of the reticles
+                     const converted = args.xr.convertSpace(pose.transform);
+                     const reticle = this._reticle[0];
+                     if (reticle) {
+                         reticle.position.copy(converted.position);
+                         reticle.quaternion.copy(converted.quaternion);
+-                        this.onApplyPose(reticle);
++                        this.onApplyPose(reticle, true);
+                     }
+                 }
+             }
+@@ -362,7 +362,7 @@ export class WebARSessionRoot extends Behaviour {
+         // TODO: we should probably use the non-lerped position and quaternion here
+         reticle.position.copy(reticle["lastPos"]);
+         reticle.quaternion.copy(reticle["lastQuat"]);
+-        this.onApplyPose(reticle);
++        this.onApplyPose(reticle, this.useXRAnchor);
+         WebARSessionRoot._hasPlaced = true;
+         if (this.useXRAnchor) {
+             this.onCreateAnchor(NeedleXRSession.active, hit);
+@@ -411,7 +411,8 @@ export class WebARSessionRoot extends Behaviour {
+         }
+         else {
+             // @ts-ignore
+-            const anchor = await hit.createAnchor(session.viewerPose.transform);
++            // Create anchor from hit (surface pose) so content stays world-locked
++            const anchor = await hit.createAnchor();
+             // make sure the session is still active
+             if (session.running && anchor) {
+                 this._anchor = anchor;
+@@ -464,15 +465,15 @@ export class WebARSessionRoot extends Behaviour {
+         reticle.scale.set(scale, scale, scale);
+         */
+     }
+-    onApplyPose(reticle) {
++    onApplyPose(reticle, skipViewBasedTransform = false) {
+         const rigObject = NeedleXRSession.active?.rig?.gameObject;
+         if (!rigObject) {
+             console.warn("No rig object to place");
+             return;
+         }
+         // const rigScale = NeedleXRSession.active?.rigScale || 1;
+-        // save the previous rig parent
+-        const previousParent = rigObject.parent || this.context.scene;
++        // When using an anchor, keep rig directly in scene so it stays world-locked (not under any moving node).
++        const previousParent = this.useXRAnchor ? this.context.scene : (rigObject.parent || this.context.scene);
+         // if we have placed this rig before and this is just "replacing" with the anchor
+         // we need to make sure the XRRig attached to the reticle is at the same position as last time
+         // since in the following code we move it inside the reticle (relative to the reticle)
+@@ -482,7 +483,8 @@ export class WebARSessionRoot extends Behaviour {
+         else {
+             this._rigPlacementMatrix = rigObject.matrix.clone();
+         }
+-        this.applyViewBasedTransform(reticle);
++        if (!skipViewBasedTransform)
++            this.applyViewBasedTransform(reticle);
+         reticle.updateMatrix();
+         // attach rig to reticle (since the reticle is in rig space it's a easy way to place the rig where we want it relative to the reticle)
+         this.context.scene.add(reticle);
